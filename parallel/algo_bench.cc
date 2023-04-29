@@ -32,13 +32,15 @@ constexpr int DEF_STEPS = 10;
 constexpr const char *DEF_POLICY = "seq";
 constexpr const char *DEF_ALG = "reduce";
 
-enum class Policy { Seq, Par, Par_Unseq, Wrong };
+enum class Policy { Seq, Unseq, Par, Par_Unseq, Wrong };
 
 constexpr auto getPolicy(std::string P) {
   std::transform(P.begin(), P.end(), P.begin(),
                  [](unsigned char C) { return std::tolower(C); });
   if (P == "seq")
     return Policy::Seq;
+  if (P == "unseq")
+    return Policy::Unseq;
   if (P == "par")
     return Policy::Par;
   if (P == "par_unseq")
@@ -77,7 +79,7 @@ Config parse_cfg(int argc, char **argv) {
   OptParser.template add<int>("nstep", DEF_NSTEP, "elts for each step");
   OptParser.template add<int>("steps", DEF_STEPS, "number of steps");
   OptParser.template add<std::string>("policy", DEF_POLICY,
-                                      "policy (seq, par, par_unseq)");
+                                      "policy (seq, unseq, par, par_unseq)");
   OptParser.template add<std::string>(
       "alg", DEF_ALG, "algorithm (like transform, reduce, etc)");
   OptParser.parse(argc, argv);
@@ -100,7 +102,7 @@ Config parse_cfg(int argc, char **argv) {
     throw std::runtime_error("please specify num of steps >= 1");
   if (Cfg.P == Policy::Wrong)
     throw std::runtime_error(
-        "please specify policy to be seq, par or par_unseq");
+        "please specify policy to be seq, unseq, par or par_unseq");
   if (Cfg.A == Alg::Wrong)
     throw std::runtime_error("sorry, algorithm unsupported");
 
@@ -188,6 +190,9 @@ int main(int argc, char **argv) try {
     switch (Cfg.P) {
     case Policy::Seq:
       D = measureAlg(V.begin(), Sz, Cfg.A, exec::seq);
+      break;
+    case Policy::Unseq:
+      D = measureAlg(V.begin(), Sz, Cfg.A, exec::unseq);
       break;
     case Policy::Par:
       D = measureAlg(V.begin(), Sz, Cfg.A, exec::par);
